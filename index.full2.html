@@ -1,0 +1,200 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<title>Load Pvalues</title>
+		<script src="lib/jquery-1.7.1.min.js"></script>
+               <script src="lib/jquery-ui-1.8.23.custom.min.js"></script>
+               
+                <script src="lib/jquery.ui.tabs.min.js"></script>
+                <script src="lib/jquery.filestyle.js"></script>
+		<link rel="stylesheet" type="text/css" href="lib/dataTables.jqueryui.css">
+		<link rel="stylesheet" type="text/css" href="lib/site.css">
+		
+		<script type="text/javascript" src="lib/site.js"></script>
+
+		<script>
+		    function loadfile(file){
+			  $.ajax({
+			      url : file,
+			      dataType: "text",
+			      success : function (data) {
+						var result="<div class=\"container\"> ";
+						result+=" <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" class=\"display\" id=\"tabcase\">";
+						result+="<thead>";
+						result+="<tr>";
+						result+="<th >chr</th>";
+						result+="<th >pos</th>";
+						result+="<th>ID</th>";
+						result+="<th>ref</th>";
+						result+="<th>alt</th>";
+						result+="<th>quality</th>";
+						result+="<th>filter</th>";
+// 						result+="<th>info</th>";
+						result+="<th>gene</th>";
+						result+="<th>CAT</th>";
+						result+="<th>CMC</th>"; 
+						result+="<th>Permutation_CAT</th>";
+						result+="<th>Permutation_CMC</th>";
+						var a=0;
+						var res=data.split("\n");
+						for(var i=0; i<res.length; i++) {
+							 if(res[i].substring(0, 2) == "##"){continue;}
+							 var rows=res[i].split("\t");
+							 if(res[i].charAt(0) == '#'){
+							  for(var j=9;j<rows.length;j++){							
+								result += "<th>"+rows[j]+"</th>";							
+							 }
+							 a=rows.length-9;
+							 result+="</tr>";
+							 result+="</thead>";
+					 	         result+="<tbody>";
+							    continue;
+							 }
+							 if(res[i].length<8){continue;}
+							 
+							 result += "<tr>";
+							 
+                                                          if(rows.length<8){continue;}
+							  for(var j=0;j<7;j++){							
+								result += "<td class=\"center\">"+rows[j]+"</td>";							
+							 }
+							 var inforows=rows[7].split(";");
+							 for(var k=0;k<inforows.length;k++){
+							     var str="";
+							     var begin=inforows[k].substring(0, 3);
+							     var permut=inforows[k].substring(0, 10);
+							     var len=inforows[k].length;
+// 							     alert(inforows[k]+"  "+begin +"  "+"  "+str);
+							      if(begin.toLowerCase() == "gen" ){
+							   	  str= inforows[k].substring(5,len);
+							     }
+							     if(begin == "CAT" ){
+							   	  str= inforows[k].substring(5,len);
+							     }else if(begin == "CMC"){
+								  str=inforows[k].substring(5,len);
+							     }else if(permut == "Permut-CAT"){
+							          str=inforows[k].substring(12,len);
+							     }else if(permut == "Permut-CMC" ){
+								  str=inforows[k].substring(11,len);
+							     }
+							     result += "<td class=\"center\">"+str+"</td>";
+							 }
+							 for(var j=9;j<rows.length;j++){							
+								result += "<td class=\"center\">"+rows[j]+"</td>";							
+							 }
+// 							 for(var j=8;j<rows.length;j++){
+// 							        var tests=rows[j].split("=");
+// 							        result += "<td class=\"center\">"+tests[1]+"</td>";
+// 							 }
+						        result += "</tr>";
+						}
+// 						var b="1,2,3,4,5,6,7";
+// 						for(var k=0;k<a;k++){
+// 						b=","+b+(k+12)
+// 						}
+						result += "</tbody></table></div>";      
+						$('#pvalue').html(result);
+						$('#tabcase').dataTable( {
+						         "scrollX": true,
+						         "bScrollCollapse": true,
+							"aoColumnDefs": [
+							        { bSortable: true, aTargets: [ 0,7,8,9,10,11 ] },
+								{ bSortable: false, aTargets: [ '_all' ] }
+							]
+						});
+						
+						$('#tabcase').DataTable();
+			      }
+			});
+		    }
+		</script>
+		
+		 <script>
+                  function clickFunction() {
+                       var x = document.getElementById("frm1");
+			var input=x.vcf.value;
+			var control=x.controlvcf.value;
+			var times=x.times.value;
+			var size=x.size.value;
+			var output=x.output.value;
+			var suffix=x.suffix.value;
+			var model=x.model.value;
+			var rank=x.rank.value;
+			var ped=x.ped.value;
+			var casecols=x.casecols.value;
+			var controlcols=x.controlcols.value;
+			var cmd="";
+			if(input){
+			   cmd=cmd+" -vcf "+input;
+			}else{
+			   alert("-vcf is required!");
+			   return;
+			}
+			if(control){cmd=cmd+" -controlvcf "+control;}
+			if(output){
+			     cmd=cmd+" -o "+output;
+			}else{
+			    alert("-o is required!");
+			    return;
+			}
+			if(rank){cmd=cmd+" -rank "+rank;}
+			if(ped){cmd=cmd+" -ped "+ped;}
+			if(casecols){cmd=cmd+" -casecols "+casecols;}
+			if(controlcols){cmd=cmd+" -controlcols " +controlcols;}
+			if(times){cmd=cmd+" -permutation "+times ;}
+			if(suffix){cmd=cmd+" -prefix "+suffix;}
+			if(size){cmd=cmd+" -size "+size;}
+			if(model){cmd=cmd+" -model "+model;}
+			if(!cmd){alert("Please set parameters!");return}
+                        var cmdstr = "java -jar rvas.jar "+cmd;
+                        document.getElementById("cmd").innerHTML = cmdstr;
+                        var file=output+"/"+suffix+".pvalues.txt";
+                        document.getElementById("out").innerHTML = "pvalue outputs to "+file;
+	                loadfile(file);
+                  }
+                  
+     
+             </script>
+             
+                    
+                    
+                
+	</head>
+	
+	
+	<body>
+	   <form id="frm1" action="form_action.asp">
+	        required paraments:<br>
+	         &nbsp;&nbsp;&nbsp;&nbsp; -vcf: cases vcf or cases and controls multiple vcf, eg. data/kabuki.cases.vcf <input type="text" name="vcf" value="test.vcf" style="height:25px;font-size:12pt;" size=20> <br>
+	        &nbsp;&nbsp;&nbsp;&nbsp;-o: output folder, eg.Test/ <input type="text" name="output" value="Test/"  style="height:25px;font-size:12pt;"  size=10> <br>
+	        options:<br>
+	        &nbsp;&nbsp;&nbsp;&nbsp;scenario 1: if vcf included case and control individuals, it has two ways to identify case and controls,<br>
+	        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. to specify the columns of case and control in the multiple vcf files,<br>
+	        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-casecols: case columns in multiple vcf,eg.1-5,7-8,23 <input type="text" name="casecols" value="" style="height:25px;font-size:12pt;"  size=20><br>
+	        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-controlcols: control columns in multiple vcf, eg.16-20,34,45-90 <input type="text" name="controlcols" value="" style="height:25px;font-size:12pt;"  size=20><br>	
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. to give a ped file which indicates the affected and unaffected individuals,<br>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-ped : ped file, eg.data/MS.ped   <input type="text" name="ped" value="" style="height:25px;font-size:12pt;"  size=20><br>
+	        &nbsp;&nbsp;&nbsp;&nbsp;scenario 2: if vcf only included case individuals, there also two ways to acess controls <br>
+	        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1. to give the controls vcf file,<br>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-controlvcf: controls vcf, eg.data/1kg.controls.vcf.gz <input type="text" name="controlvcf" value="" style="height:25px;font-size:12pt;"  size=20><br>
+	        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. if controls vcf file is not given, it will select ctrsize individuals from 1000 genomes, <br> 
+	        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; a. if rank file is given, it will select the most similar control individuals according to rank file.<br>
+	        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -rank :similarity matrix file,eg. data/1KG_rare_final.txt <input type="text" name="rank" value="" style="height:25px;font-size:12pt;"  size=20><br>
+	        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;b. if rank file is not given, it will randomly choosen ctrsize individuals as controls.<br>
+	        other options:<br>
+	        &nbsp;&nbsp;&nbsp;&nbsp;-suffix: prefix of output file, <input type="text" name="suffix" value="kabuki"  style="height:25px;font-size:12pt;"> <br>
+		&nbsp;&nbsp;&nbsp;&nbsp;-permutation: permutation times : <input type="number" name="times" value="1000"  style="height:25px;font-size:12pt;" size=2><br>	
+		&nbsp;&nbsp;&nbsp;&nbsp;-ctrsize: control group size: <input type="number" name="size" value="100"  style="height:25px;font-size:12pt;"  size=2><br>
+		&nbsp;&nbsp;&nbsp;&nbsp;-model: genetic model: <input type="number" name="model" value="1"  style="height:25px;font-size:12pt;"  size=1> (0:dominant 1:addtive 2:recessive)<br>
+         </form> 
+         
+         
+         <button onclick="clickFunction()">test it</button>
+	 
+	  <p id="cmd"></p>
+	  <p id="out"></p>
+	  <p id="pvalue"></p>
+
+
+</body>
+</html>

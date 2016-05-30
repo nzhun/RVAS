@@ -1,0 +1,16 @@
+-classpath '/home/lindelof/projects/jgsl/target/classes' -protected
+-sourcepath
+'/home/lindelof/projects/jgsl/src/main/java'
+-author
+-bottom
+'Copyright &copy; 2007. All Rights Reserved.'
+-charset
+'ISO-8859-1'
+-d
+'/home/lindelof/projects/jgsl/target/apidocs'
+-doctitle
+'Java GNU Scientific Library 0.1.0 API'
+-use
+-version
+-windowtitle
+'Java GNU Scientific Library 0.1.0 API'
